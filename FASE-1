@@ -1,0 +1,107 @@
+db.familias_en_accion.insertmany ([
+{ Bancarizado: “si”, Codigodepartamentoatencion: “08”, Discapacidad: “NO”, Estadobeneficiario: “ACTIVO", Etnia: "AFROCOLOMBIANO”, Fechainscripcionbeneficiario: ("2012-12-01”), Genero: “MASCULINO", Nivelescolaridad: “PRIMARIA”,  Cantidaddebeneficiarios: “1” },
+{ Bancarizado: “No”, Codigodepartamentoatencion: “13”, Discapacidad: “NO”, Estadobeneficiario: “ NO ACTIVO", Etnia: "ND”, Fechainscripcionbeneficiario: ("2012-11-01”), Genero: “FEMENINO", Nivelescolaridad: “BACHILLER”,  Cantidaddebeneficiarios: “21” },
+{ Bancarizado: “si”, Codigodepartamentoatencion: “048”, Discapacidad: “NO”, Estadobeneficiario: “ACTIVO", Etnia: "AFROCOLOMBIANO”, Fechainscripcionbeneficiario: ("2012-10-01”), Genero: “MASCULINO", Nivelescolaridad: “TECNICO”,  Cantidaddebeneficiarios: “1” },
+{ Bancarizado: “No”, Codigodepartamentoatencion: “133”, Discapacidad: “SI”, Estadobeneficiario: “ NO ACTIVO", Etnia: "NEGRO”, Fechainscripcionbeneficiario: ("2012-09-01”), Genero: “FEMENINO", Nivelescolaridad: “BACHILLER”,  Cantidaddebeneficiarios: “2” },
+{ Bancarizado: “si”, Codigodepartamentoatencion: “049”, Discapacidad: “NO”, Estadobeneficiario: “ACTIVO", Etnia: "AFROCOLOMBIANO”, Fechainscripcionbeneficiario: ("2012-08-01”), Genero: “MASCULINO", Nivelescolaridad: “PRIMARIA”,  Cantidaddebeneficiarios: “1” },
+{ Bancarizado: “No”, Codigodepartamentoatencion: “03”, Discapacidad: “SI”, Estadobeneficiario: “ NO ACTIVO", Etnia: "MEXTIZO”, Fechainscripcionbeneficiario: ("2012-07-01”), Genero: “FEMENINO", Nivelescolaridad: “BACHILLER”,  Cantidaddebeneficiarios: “2” },
+  //***********************************************************
+ // Selección //
+ db.Usuarios.find(
+{},
+{ Bancarizado:  1, CodigoDepartamentoAtencion: 1, Discapacidad: 1, EstadoBeneficiario:  1, Etnia: 1, Genero: 1, NivelEscolaridad: 1, Pais: 1, TipoAsignacionBeneficio: 1, TipoDocumento: 1, TipoPoblacion: 1,
+RangoBeneficioConsolidadoAsignado: 1, RangoUltimoBeneficioAsignado: 1, RangoEdad: 1, Titular: 1, CantidadDeBeneficiarios: 1, _id: 0,  }
+);
+//*******************************
+Actualizar uno
+db.Usuarios.updateOne (
+{Genero:' Mujer' },
+{$set: {RangoEdad: '15-30'}}
+);
+//********************************
+VARIOS 
+db.Usuarios.updateMany(
+{TipoDocumento: 'CC'},
+{$set: {Etnia: 'Incas'}}
+); 
+//***************************
+eliminar todos
+db.Usuarios.deleteMany({ Pais: 'ND'}
+);
+ Eliminar uno
+db.Usuarios.deleteOne ({Titular: 'NO'}
+);
+//******************************
+db.Usuarios.aggregate ([
+  { $match: { EstadoBeneficiario: 'ACTIVO' } },
+  { $count: 'totalBeneficiariosActivos' }
+]);
+//******************************************+
+Calcular la suma total de beneficiarios por departamento:
+ 
+
+ db.Usuarios.aggregate ([
+  {
+    $group: {
+      _id: "$NombreDepartamentoAtencion",
+      totalBeneficiarios: { $sum: "$CantidadDeBeneficiarios" }
+    }
+  }
+]);
+//*******************************************+++
+Calcular el promedio de la cantidad de beneficiarios para beneficiarios activos: 
+ db.Usuarios.aggregate ([
+  { $match: { EstadoBeneficiario: 'ACTIVO' } },
+  {
+    $group: {
+      _id: null,
+      promedioBeneficiarios: { $avg: "$CantidadDeBeneficiarios" }
+    }
+  }
+]);
+//*********************************************
+Número de beneficiarios por género en el departamento de TOLIMA:
+ db.Usuarios.aggregate ([
+  { $match: { NombreDepartamentoAtencion: 'TOLIMA' } },
+  {
+    $group: {
+      _id: "$Genero",
+      totalPorGenero: { $sum: 1 }
+    }
+  }
+]);
+//*****************************
+Suma total de beneficiarios por tipo de beneficio:
+ db.Usuarios.aggregate ([
+  {
+    $group: {
+      _id: "$TipoBeneficio",
+      totalBeneficiarios: { $sum: "$CantidadDeBeneficiarios" }
+    }
+  }
+]);
+//************************************
+ filtros y operadores
+Filtrar beneficiarios que sean mujeres y tengan algún tipo de discapacidad:
+db.Usuarios.find({
+  Genero: 'Mujer',
+  Discapacidad: { $ne: 'NO' } // Filtra por aquellos que NO sean 'NO'
+});
+
+///****************
+Beneficiarios cuya edad esté en el rango '06-17' y que pertenecen a la población indígena:
+db.Usuarios.find({
+  RangoEdad: '06-17',
+  TipoPoblacion: 'INDIGENAS'
+});
+//**************************
+Buscar beneficiarios que no están bancarizados y cuyo último beneficio está en un rango específico:
+ db.Usuarios.find({
+  Bancarizado: 'ND',
+  RangoUltimoBeneficioAsignado: { $gte: '0 - 1.000.000', $lte: '0 - 1.300.000' }
+});
+
+
+
+
+
